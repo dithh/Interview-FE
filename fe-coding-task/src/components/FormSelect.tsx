@@ -2,21 +2,36 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import {forwardRef} from "react";
+import {forwardRef, Ref} from "react";
+import {UseFormRegisterReturn} from "react-hook-form";
 
 type FormSelectProps = {
     label: string;
     values: Array<string | number>;
     id: string;
-    field: unknown
+    onChange: (value: any) => void
+    onBlur: () => void;
+    value: unknown
+    ref: Ref<any>
+    name: string
+
 }
 
-export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({field, label, values, id}, ref) => {
+export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
+                                                                              onChange,
+                                                                              onBlur,
+                                                                              value,
+                                                                              name,
+                                                                              label,
+                                                                              values,
+                                                                              id
+                                                                          }, ref) => {
     return (
         <FormControl fullWidth>
             <InputLabel id={`${id}-label`}>{label}</InputLabel>
             <Select
-                {...field}
+                value={value} name={name} onBlur={onBlur}
+                onChange={onChange}
                 ref={ref}
                 id={id}
                 label={label}

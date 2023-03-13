@@ -1,18 +1,33 @@
 import {TextField} from "@mui/material";
-import {forwardRef} from "react";
-import {ControllerRenderProps, FieldValues} from "react-hook-form";
-import {FormData} from "./AppForm";
+import {forwardRef, Ref} from "react";
+import {FieldError} from "react-hook-form";
+
 
 type FormTextFieldProps = {
     label: string;
-    field: unknown
 
+    onChange: (value: any) => void
+    onBlur: () => void;
+    value: unknown
+    ref: Ref<any>
+    name: string
+
+    error?: FieldError
 
 }
 
 // export const FormTextField = ({label, value}: FormTextFieldProps) => (
 //     <TextField fullWidth value={value} label={label}></TextField>
 // )
-export const FormTextField = forwardRef<HTMLInputElement, FormTextFieldProps>(({label, field}, ref) => (
-    <TextField fullWidth {...field} ref={ref} label={label}></TextField>
+export const FormTextField = forwardRef<HTMLInputElement, FormTextFieldProps>(({
+                                                                                   label,
+                                                                                   onChange,
+                                                                                   onBlur,
+                                                                                   value,
+                                                                                   name,
+                                                                                   error
+                                                                               }, ref) => (
+    <TextField helperText={error?.message} error={!!error} fullWidth value={value} name={name} onBlur={onBlur}
+               onChange={(e) => onChange(Number(e.target.value))} ref={ref}
+               label={label}></TextField>
 ))

@@ -3,62 +3,113 @@ import {Button, Grid} from "@mui/material";
 import {buildingTypes} from "../consts/buildingTypes";
 import {FormTextField} from "./FormTextField";
 import {useForm, Controller} from "react-hook-form";
+import {HousePricesData} from "../types/HousePricesData";
+import {fetchHousePricesData} from "../services/housePricesService";
+import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
 
-
-export type FormData = {
-    startingYear: string;
-    startingQuarter: string;
-    endingYear: string;
-    endingQuarter: string;
-    buildingType: string;
-}
 
 export const AppForm = () => {
 
-    const {control, handleSubmit} = useForm<FormData>({
+
+    const {control, handleSubmit, formState: {errors}} = useForm<HousePricesData>({
         defaultValues: {
-            startingYear: '',
-            startingQuarter: '',
-            endingYear: '',
-            endingQuarter: '',
+            startingYear: 2009,
+            startingQuarter: 1,
+            endingYear: 2023,
+            endingQuarter: 1,
             buildingType: ''
         }
     });
 
-    const onSubmit = (data: FormData) => console.log(data);
+    const onSubmit = async ({
+                                startingYear,
+                                startingQuarter,
+                                endingYear,
+                                endingQuarter,
+                                buildingType
+                            }: HousePricesData) => {
+        const quarters = getAllQuartersInRange({startingYear, startingQuarter, endingYear, endingQuarter})
+        const buildingTypeCode = buildingTypes.get(buildingType) as string;
+        try {
+            const response = await fetchHousePricesData({quarters, buildingTypeCode})
+            console.log(response);
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
 
     return (<form onSubmit={handleSubmit(onSubmit)}>
         <Grid spacing={2} container>
             <Grid item xs={6}>
-                <Controller name="startingYear"
-                            control={control}
-                            render={({field}) => <FormTextField field={field}
-                                                                label={'Starting year'}></FormTextField>}/>
+                <Controller
+                    name="startingYear"
+                    control={control}
+                    rules={{
+                        required: {value: true, message: "Year has to be between 2009 and 2022"},
+                        min: {value: 2009, message: "Year has to be between 2009 and 2022"},
+                        max: {value: 2022, message: "Year has to be between 2009 and 2022"}
+                    }}
+                    render={({field, fieldState}) => <FormTextField
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        value={field.value}
+                        ref={field.ref}
+                        name={field.name}
+                        error={fieldState.error}
+                        label={'Starting year'}></FormTextField>}/>
             </Grid>
 
             <Grid item xs={6}>
-                <Controller name="startingQuarter" control={control} render={({field}) =>
-                    <FormSelect field={field} id={'start-quarter'} label={'Starting quarter'}
-                                values={['Q1', 'Q2', 'Q3', 'Q4']}></FormSelect>}/>
+                <Controller rules={{
+                    required: true,
+                }} name="startingQuarter" control={control} render={({field}) =>
+                    <FormSelect onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                value={field.value}
+                                ref={field.ref}
+                                name={field.name}
+                                id={'startingQuarter'} label={'Starting quarter'}
+                                values={[1, 2, 3, 4]}></FormSelect>}/>
 
             </Grid>
 
             <Grid item xs={6}>
                 <Controller name="endingYear"
                             control={control}
-                            render={({field}) => <FormTextField field={field}
-                                                                label={'Ending year'}></FormTextField>}/>
+                            rules={{
+                                required: {value: true, message: "Year has to be between 2009 and 2022"},
+                                min: {value: 2009, message: "Year has to be between 2009 and 2022"},
+                                max: {value: 2022, message: "Year has to be between 2009 and 2022"}
+                            }}
+                            render={({field, fieldState}) => <FormTextField
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                value={field.value}
+                                ref={field.ref}
+                                name={field.name}
+                                error={fieldState.error}
+                                label={'Ending year'}></FormTextField>}/>
             </Grid>
 
             <Grid item xs={6}>
-                <Controller name="startingQuarter" control={control} render={({field}) =>
-                    <FormSelect field={field} id={'start-quarter'} label={'Starting quarter'}
-                                values={['Q1', 'Q2', 'Q3', 'Q4']}></FormSelect>}/>
+                <Controller name="endingQuarter" control={control} render={({field}) =>
+                    <FormSelect onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                value={field.value}
+                                ref={field.ref}
+                                name={field.name}
+                                id={'endingQuarter'} label={'Ending quarter'}
+                                values={[1, 2, 3, 4]}></FormSelect>}/>
             </Grid>
 
             <Grid item xs={6}>
                 <Controller name="buildingType" control={control} render={({field}) =>
-                    <FormSelect field={field} id={'building-type'} label={'Building type'}
+                    <FormSelect onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                value={field.value}
+                                ref={field.ref}
+                                name={field.name} id={'building-type'} label={'Building type'}
                                 values={[...buildingTypes.keys()]}></FormSelect>}/>
             </Grid>
         </Grid>
