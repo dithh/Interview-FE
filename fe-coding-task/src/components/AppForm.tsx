@@ -9,26 +9,52 @@ import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
 import {useEffect} from "react";
 
 
-export const AppForm = () => {
+const DEFAULT_VALUES = {
+    STARTING_YEAR: 2009,
+    STARTING_QUARTER: 1,
+    ENDING_YEAR: 2023,
+    ENDING_QUARTER: 1,
+    BUILDING_TYPE: 'Boliger i alt'
+}
 
+export const AppForm = () => {
+    const getInitialValues = (): HousePricesData => {
+        const initialValues = {
+            startingYear: Number(getQueryParam('startingYear') || localStorage.getItem('startingYear')) || DEFAULT_VALUES.STARTING_YEAR,
+            startingQuarter: Number(getQueryParam('startingQuarter') || localStorage.getItem('startingQuarter')) || DEFAULT_VALUES.STARTING_QUARTER,
+            endingYear: Number(getQueryParam('endingYear') || localStorage.getItem('endingYear')) || DEFAULT_VALUES.ENDING_YEAR,
+            endingQuarter: Number(getQueryParam('endingQuarter') || localStorage.getItem('endingQuarter')) || DEFAULT_VALUES.ENDING_QUARTER,
+            buildingType: getQueryParam('buildingType') || localStorage.getItem('buildingType') || DEFAULT_VALUES.BUILDING_TYPE
+        }
+        return initialValues;
+    }
+
+    const addQueryParam = (key: string, value: string) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set(key, value);
+        window.history.pushState({}, '', url.toString());
+    };
+
+    const getQueryParam = (key: string) => {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(key) || '';
+    };
 
     const {control, handleSubmit, watch, getValues, trigger} = useForm<HousePricesData>({
-        defaultValues: {
-            startingYear: 2009,
-            startingQuarter: 1,
-            endingYear: 2023,
-            endingQuarter: 1,
-            buildingType: 'Boliger i alt'
-        },
+        defaultValues: getInitialValues()
     });
-
 
     useEffect(() => {
         const subscription = watch(async (value, {name}) => {
+            if (!name) {
+                return;
+            }
             if (name === 'startingYear' || name === 'endingYear') {
                 await trigger('endingYear')
             }
-            name && localStorage.setItem(name, String(value[name]))
+            localStorage.setItem(name, String(value[name]))
+
+            addQueryParam(name, String(value[name]))
         })
         return () => subscription.unsubscribe();
     }, [watch]);
