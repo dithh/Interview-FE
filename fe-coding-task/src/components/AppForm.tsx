@@ -1,12 +1,33 @@
 import {FormSelect} from "./FormSelect";
 import {Button, Grid} from "@mui/material";
-import {buildingTypes} from "../consts/buildingTypes";
+import {BUILDING_TYPES} from "../consts/buildingTypes";
 import {FormTextField} from "./FormTextField";
 import {useForm, Controller} from "react-hook-form";
 import {HousePricesData} from "../types/HousePricesData";
 import {fetchHousePricesData} from "../services/housePricesService";
 import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+import {Line} from 'react-chartjs-2';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 
 const DEFAULT_VALUES = {
@@ -18,15 +39,20 @@ const DEFAULT_VALUES = {
 }
 
 export const AppForm = () => {
+
+    const [chartData, setChartData] = useState<any>('')
+    const [chartLabels, setChartLabels] = useState<any>('')
+    const [buildingType, setBuildingType] = useState<any>('')
+
     const getInitialValues = (): HousePricesData => {
-        const initialValues = {
+        return {
             startingYear: Number(getQueryParam('startingYear') || localStorage.getItem('startingYear')) || DEFAULT_VALUES.STARTING_YEAR,
             startingQuarter: Number(getQueryParam('startingQuarter') || localStorage.getItem('startingQuarter')) || DEFAULT_VALUES.STARTING_QUARTER,
             endingYear: Number(getQueryParam('endingYear') || localStorage.getItem('endingYear')) || DEFAULT_VALUES.ENDING_YEAR,
             endingQuarter: Number(getQueryParam('endingQuarter') || localStorage.getItem('endingQuarter')) || DEFAULT_VALUES.ENDING_QUARTER,
             buildingType: getQueryParam('buildingType') || localStorage.getItem('buildingType') || DEFAULT_VALUES.BUILDING_TYPE
         }
-        return initialValues;
+
     }
 
     const addQueryParam = (key: string, value: string) => {
@@ -67,61 +93,37 @@ export const AppForm = () => {
                                 buildingType
                             }: HousePricesData) => {
         const quarters = getAllQuartersInRange({startingYear, startingQuarter, endingYear, endingQuarter})
-        const buildingTypeCode = buildingTypes.get(buildingType) as string;
+        const buildingTypeCode = BUILDING_TYPES.get(buildingType) as string;
         try {
             const response = await fetchHousePricesData({quarters, buildingTypeCode})
             console.log(response);
+            const chartLabels = response.data.data.map((data: { key: Array<string>; }) => (
+                data.key[1]
+            ))
+            const chartData = response.data.data.map((data: { values: Array<string>; }) => (
+                data.values[0]
+            ))
+            setChartLabels(chartLabels)
+            setChartData(chartData)
+            setBuildingType(buildingType)
         } catch (e) {
             console.error(e)
         }
     }
 
 
-    return (<form onSubmit={handleSubmit(onSubmit)}>
-        <Grid spacing={2} container>
-            <Grid item xs={6}>
-                <Controller
-                    name="startingYear"
-                    control={control}
-                    rules={{
-                        required: {value: true, message: "Year has to be between 2009 and 2022"},
-                        min: {value: 2009, message: "Year has to be between 2009 and 2022"},
-                        max: {value: 2022, message: "Year has to be between 2009 and 2022"}
-                    }}
-                    render={({field, fieldState}) => <FormTextField
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        value={field.value}
-                        ref={field.ref}
-                        name={field.name}
-                        error={fieldState.error}
-                        label={'Starting year'}></FormTextField>}/>
-            </Grid>
-
-            <Grid item xs={6}>
-                <Controller rules={{
-                    required: true,
-                }} name="startingQuarter" control={control} render={({field}) =>
-                    <FormSelect onChange={field.onChange}
-                                onBlur={field.onBlur}
-                                value={field.value}
-                                ref={field.ref}
-                                name={field.name}
-                                id={'startingQuarter'} label={'Starting quarter'}
-                                values={[1, 2, 3, 4]}></FormSelect>}/>
-
-            </Grid>
-
-            <Grid item xs={6}>
-                <Controller name="endingYear"
+    return (
+        <>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <Grid spacing={2} container>
+                    <Grid item xs={6}>
+                        <Controller
+                            name="startingYear"
                             control={control}
                             rules={{
                                 required: {value: true, message: "Year has to be between 2009 and 2022"},
                                 min: {value: 2009, message: "Year has to be between 2009 and 2022"},
-                                max: {value: 2022, message: "Year has to be between 2009 and 2022"},
-                                validate: (value) => {
-                                    return value >= getValues().startingYear || 'Ending year has to be equal or greater than starting year'
-                                }
+                                max: {value: 2022, message: "Year has to be between 2009 and 2022"}
                             }}
                             render={({field, fieldState}) => <FormTextField
                                 onChange={field.onChange}
@@ -130,37 +132,85 @@ export const AppForm = () => {
                                 ref={field.ref}
                                 name={field.name}
                                 error={fieldState.error}
-                                label={'Ending year'}></FormTextField>}/>
-            </Grid>
+                                label={'Starting year'}></FormTextField>}/>
+                    </Grid>
 
-            <Grid item xs={6}>
-                <Controller name="endingQuarter" control={control} render={({field}) =>
-                    <FormSelect onChange={field.onChange}
-                                onBlur={field.onBlur}
-                                value={field.value}
-                                ref={field.ref}
-                                name={field.name}
-                                id={'endingQuarter'} label={'Ending quarter'}
-                                values={[1, 2, 3, 4]}></FormSelect>}/>
-            </Grid>
+                    <Grid item xs={6}>
+                        <Controller rules={{
+                            required: true,
+                        }} name="startingQuarter" control={control} render={({field}) =>
+                            <FormSelect onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        value={field.value}
+                                        ref={field.ref}
+                                        name={field.name}
+                                        id={'startingQuarter'} label={'Starting quarter'}
+                                        values={[1, 2, 3, 4]}></FormSelect>}/>
 
-            <Grid item xs={6}>
-                <Controller name="buildingType" rules={{
-                    required: {
-                        value: true,
-                        message: "Field required"
-                    }
-                }} control={control} render={({field, fieldState}) =>
-                    <FormSelect onChange={field.onChange}
-                                onBlur={field.onBlur}
-                                value={field.value}
-                                error={fieldState.error}
-                                ref={field.ref}
-                                name={field.name} id={'building-type'} label={'Building type'}
-                                values={[...buildingTypes.keys()]}></FormSelect>}/>
-            </Grid>
-        </Grid>
-        <Button type="submit" variant="text">Submit</Button>
-    </form>)
+                    </Grid>
+
+                    <Grid item xs={6}>
+                        <Controller name="endingYear"
+                                    control={control}
+                                    rules={{
+                                        required: {value: true, message: "Year has to be between 2009 and 2022"},
+                                        min: {value: 2009, message: "Year has to be between 2009 and 2022"},
+                                        max: {value: 2022, message: "Year has to be between 2009 and 2022"},
+                                        validate: (value) => {
+                                            return value >= getValues().startingYear || 'Ending year has to be equal or greater than starting year'
+                                        }
+                                    }}
+                                    render={({field, fieldState}) => <FormTextField
+                                        onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        value={field.value}
+                                        ref={field.ref}
+                                        name={field.name}
+                                        error={fieldState.error}
+                                        label={'Ending year'}></FormTextField>}/>
+                    </Grid>
+
+                    <Grid item xs={6}>
+                        <Controller name="endingQuarter" control={control} render={({field}) =>
+                            <FormSelect onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        value={field.value}
+                                        ref={field.ref}
+                                        name={field.name}
+                                        id={'endingQuarter'} label={'Ending quarter'}
+                                        values={[1, 2, 3, 4]}></FormSelect>}/>
+                    </Grid>
+
+                    <Grid item xs={6}>
+                        <Controller name="buildingType" rules={{
+                            required: {
+                                value: true,
+                                message: "Field required"
+                            }
+                        }} control={control} render={({field, fieldState}) =>
+                            <FormSelect onChange={field.onChange}
+                                        onBlur={field.onBlur}
+                                        value={field.value}
+                                        error={fieldState.error}
+                                        ref={field.ref}
+                                        name={field.name} id={'building-type'} label={'Building type'}
+                                        values={[...BUILDING_TYPES.keys()]}></FormSelect>}/>
+                    </Grid>
+                </Grid>
+                <Button type="submit" variant="text">Submit</Button>
+            </form>
+            <Line
+                datasetIdKey='id'
+                data={{
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: `${buildingType} - Average price per square meter (NOK)`,
+                            data: chartData,
+                        },
+                    ],
+                }}
+            />
+        </>)
 }
 
