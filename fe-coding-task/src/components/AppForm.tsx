@@ -11,7 +11,7 @@ import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
 export const AppForm = () => {
 
 
-    const {control, handleSubmit, formState: {errors}} = useForm<HousePricesData>({
+    const {control, handleSubmit, getValues} = useForm<HousePricesData>({
         defaultValues: {
             startingYear: 2009,
             startingQuarter: 1,
@@ -80,7 +80,10 @@ export const AppForm = () => {
                             rules={{
                                 required: {value: true, message: "Year has to be between 2009 and 2022"},
                                 min: {value: 2009, message: "Year has to be between 2009 and 2022"},
-                                max: {value: 2022, message: "Year has to be between 2009 and 2022"}
+                                max: {value: 2022, message: "Year has to be between 2009 and 2022"},
+                                validate: (value) => {
+                                    return value >= getValues().startingYear || 'Ending year has to be equal or greater than starting year'
+                                }
                             }}
                             render={({field, fieldState}) => <FormTextField
                                 onChange={field.onChange}
