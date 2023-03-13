@@ -3,7 +3,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import {forwardRef, Ref} from "react";
-import {UseFormRegisterReturn} from "react-hook-form";
+import {FieldError, UseFormRegisterReturn} from "react-hook-form";
 
 type FormSelectProps = {
     label: string;
@@ -15,9 +15,12 @@ type FormSelectProps = {
     ref: Ref<any>
     name: string
 
+    error?: FieldError
+
 }
 
 export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
+                                                                              error,
                                                                               onChange,
                                                                               onBlur,
                                                                               value,

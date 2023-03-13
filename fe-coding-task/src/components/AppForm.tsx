@@ -6,20 +6,32 @@ import {useForm, Controller} from "react-hook-form";
 import {HousePricesData} from "../types/HousePricesData";
 import {fetchHousePricesData} from "../services/housePricesService";
 import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
+import {useEffect} from "react";
 
 
 export const AppForm = () => {
 
 
-    const {control, handleSubmit, getValues} = useForm<HousePricesData>({
+    const {control, handleSubmit, watch, getValues, trigger} = useForm<HousePricesData>({
         defaultValues: {
             startingYear: 2009,
             startingQuarter: 1,
             endingYear: 2023,
             endingQuarter: 1,
-            buildingType: ''
-        }
+            buildingType: 'Boliger i alt'
+        },
     });
+
+
+    useEffect(() => {
+        const subscription = watch(async (value, {name}) => {
+            if (name === 'startingYear' || name === 'endingYear') {
+                await trigger('endingYear')
+            }
+            name && localStorage.setItem(name, String(value[name]))
+        })
+        return () => subscription.unsubscribe();
+    }, [watch]);
 
     const onSubmit = async ({
                                 startingYear,
@@ -107,10 +119,16 @@ export const AppForm = () => {
             </Grid>
 
             <Grid item xs={6}>
-                <Controller name="buildingType" control={control} render={({field}) =>
+                <Controller name="buildingType" rules={{
+                    required: {
+                        value: true,
+                        message: "Field required"
+                    }
+                }} control={control} render={({field, fieldState}) =>
                     <FormSelect onChange={field.onChange}
                                 onBlur={field.onBlur}
                                 value={field.value}
+                                error={fieldState.error}
                                 ref={field.ref}
                                 name={field.name} id={'building-type'} label={'Building type'}
                                 values={[...buildingTypes.keys()]}></FormSelect>}/>
