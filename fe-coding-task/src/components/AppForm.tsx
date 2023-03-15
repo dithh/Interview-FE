@@ -6,7 +6,7 @@ import {useForm, Controller} from "react-hook-form";
 import {HousePricesData} from "../types/HousePricesData";
 import {fetchHousePricesData} from "../services/housePricesService";
 import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
-import {useEffect, useState} from "react";
+import {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -29,6 +29,12 @@ ChartJS.register(
     Legend
 );
 
+type AppFormProps = {
+    setChartData: Dispatch<any>;
+    setChartLabels: Dispatch<SetStateAction<string[]>>;
+    setBuildingType: Dispatch<SetStateAction<string>>;
+}
+
 
 const DEFAULT_VALUES = {
     STARTING_YEAR: 2009,
@@ -38,11 +44,7 @@ const DEFAULT_VALUES = {
     BUILDING_TYPE: 'Boliger i alt'
 }
 
-export const AppForm = () => {
-
-    const [chartData, setChartData] = useState<any>('')
-    const [chartLabels, setChartLabels] = useState<any>('')
-    const [buildingType, setBuildingType] = useState<any>('')
+export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppFormProps) => {
 
     const getInitialValues = (): HousePricesData => {
         return {
@@ -96,7 +98,6 @@ export const AppForm = () => {
         const buildingTypeCode = BUILDING_TYPES.get(buildingType) as string;
         try {
             const response = await fetchHousePricesData({quarters, buildingTypeCode})
-            console.log(response);
             const chartLabels = response.data.data.map((data: { key: Array<string>; }) => (
                 data.key[1]
             ))
@@ -199,18 +200,6 @@ export const AppForm = () => {
                 </Grid>
                 <Button type="submit" variant="text">Submit</Button>
             </form>
-            <Line
-                datasetIdKey='id'
-                data={{
-                    labels: chartLabels,
-                    datasets: [
-                        {
-                            label: `${buildingType} - Average price per square meter (NOK)`,
-                            data: chartData,
-                        },
-                    ],
-                }}
-            />
         </>)
 }
 

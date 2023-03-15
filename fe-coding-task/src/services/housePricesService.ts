@@ -1,4 +1,3 @@
-import {HousePricesData} from "../types/HousePricesData";
 import {httpClient} from "../httpClient/httpClient";
 
 type HousePricesRequestData = {
@@ -10,7 +9,6 @@ export const fetchHousePricesData = ({
                                          quarters,
                                          buildingTypeCode
                                      }: HousePricesRequestData) => {
-    console.log(quarters);
     const body =
         {
             "query": [
