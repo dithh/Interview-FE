@@ -21,7 +21,7 @@ type AppFormProps = {
 const DEFAULT_VALUES = {
     STARTING_YEAR: 2009,
     STARTING_QUARTER: 1,
-    ENDING_YEAR: 2023,
+    ENDING_YEAR: 2022,
     ENDING_QUARTER: 1,
     BUILDING_TYPE: 'Boliger i alt'
 }
