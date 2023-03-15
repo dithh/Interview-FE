@@ -3,7 +3,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import {forwardRef, Ref} from "react";
-import {FieldError, UseFormRegisterReturn} from "react-hook-form";
+import {FieldError} from "react-hook-form";
 
 type FormSelectProps = {
     label: string;

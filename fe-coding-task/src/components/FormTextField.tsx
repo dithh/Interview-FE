@@ -13,6 +13,7 @@ type FormTextFieldProps = {
     name: string
 
     error?: FieldError
+    type?: string
 
 }
 
@@ -25,9 +26,10 @@ export const FormTextField = forwardRef<HTMLInputElement, FormTextFieldProps>(({
                                                                                    onBlur,
                                                                                    value,
                                                                                    name,
+                                                                                   type,
                                                                                    error
                                                                                }, ref) => (
     <TextField helperText={error?.message} error={!!error} fullWidth value={value} name={name} onBlur={onBlur}
-               onChange={(e) => onChange(Number(e.target.value))} ref={ref}
+               onChange={(e) => onChange(type === 'number' ? Number(e.target.value) : e.target.value)} ref={ref}
                label={label}></TextField>
 ))

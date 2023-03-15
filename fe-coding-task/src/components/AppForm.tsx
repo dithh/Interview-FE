@@ -6,33 +6,15 @@ import {useForm, Controller} from "react-hook-form";
 import {HousePricesData} from "../types/HousePricesData";
 import {fetchHousePricesData} from "../services/housePricesService";
 import {getAllQuartersInRange} from "../utils/getAllQuartersInRange";
-import {Dispatch, SetStateAction, useEffect, useState} from "react";
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-} from 'chart.js';
-import {Line} from 'react-chartjs-2';
+import {Dispatch, SetStateAction, useEffect} from "react";
+import {ChartLabels} from "../types/ChartLabels";
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
-);
 
 type AppFormProps = {
     setChartData: Dispatch<any>;
-    setChartLabels: Dispatch<SetStateAction<string[]>>;
+    setChartLabels: Dispatch<SetStateAction<ChartLabels>>;
     setBuildingType: Dispatch<SetStateAction<string>>;
+    setIsModalOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 
@@ -44,7 +26,9 @@ const DEFAULT_VALUES = {
     BUILDING_TYPE: 'Boliger i alt'
 }
 
-export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppFormProps) => {
+export const AppForm = ({setChartData, setChartLabels, setBuildingType, setIsModalOpen}: AppFormProps) => {
+
+    const openFavoritesModal = () => setIsModalOpen(true);
 
     const getInitialValues = (): HousePricesData => {
         return {
@@ -85,7 +69,7 @@ export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppForm
             addQueryParam(name, String(value[name]))
         })
         return () => subscription.unsubscribe();
-    }, [watch]);
+    }, [watch, trigger]);
 
     const onSubmit = async ({
                                 startingYear,
@@ -95,7 +79,7 @@ export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppForm
                                 buildingType
                             }: HousePricesData) => {
         const quarters = getAllQuartersInRange({startingYear, startingQuarter, endingYear, endingQuarter})
-        const buildingTypeCode = BUILDING_TYPES.get(buildingType) as string;
+        const buildingTypeCode = BUILDING_TYPES[buildingType];
         try {
             const response = await fetchHousePricesData({quarters, buildingTypeCode})
             const chartLabels = response.data.data.map((data: { key: Array<string>; }) => (
@@ -132,6 +116,7 @@ export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppForm
                                 value={field.value}
                                 ref={field.ref}
                                 name={field.name}
+                                type="number"
                                 error={fieldState.error}
                                 label={'Starting year'}></FormTextField>}/>
                     </Grid>
@@ -168,6 +153,7 @@ export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppForm
                                         ref={field.ref}
                                         name={field.name}
                                         error={fieldState.error}
+                                        type="number"
                                         label={'Ending year'}></FormTextField>}/>
                     </Grid>
 
@@ -195,10 +181,13 @@ export const AppForm = ({setChartData, setChartLabels, setBuildingType}: AppForm
                                         error={fieldState.error}
                                         ref={field.ref}
                                         name={field.name} id={'building-type'} label={'Building type'}
-                                        values={[...BUILDING_TYPES.keys()]}></FormSelect>}/>
+                                        values={Object.keys(BUILDING_TYPES)}></FormSelect>}/>
                     </Grid>
                 </Grid>
                 <Button type="submit" variant="text">Submit</Button>
+                <Button onClick={openFavoritesModal} variant="text">
+                    Save to favorites
+                </Button>
             </form>
         </>)
 }
